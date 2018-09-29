@@ -36,15 +36,7 @@ namespace Quantum.Kata.Measurements {
     // Output: true if the qubit was in the |1⟩ state, or false if it was in the |0⟩ state.
     // The state of the qubit at the end of the operation does not matter.
     operation IsQubitOne (q : Qubit) : Bool {
-        // The operation M will measure a qubit in the Z basis (|0⟩ and |1⟩ basis)
-        // and return Zero if the observed state was |0⟩ or One if the state was |1⟩.
-        // To answer the question, you need to perform the measurement and check whether the result
-        // equals One - either directly or using library function IsResultOne.
-        //
-        // Replace the returned expression with (M(q) == One).
-        // Then rebuild the project and rerun the tests - T101_IsQubitOne_Test should now pass!
-
-        return false;
+        return M(q) == One;
     }
 
 
@@ -62,8 +54,8 @@ namespace Quantum.Kata.Measurements {
     // Output: true if the qubit was in the |+⟩ state, or false if it was in the |-⟩ state.
     // The state of the qubit at the end of the operation does not matter.
     operation IsQubitPlus (q : Qubit) : Bool {
-        // ...
-        return false;
+        H(q);
+        return M(q) == Zero;
     }
 
 
@@ -76,8 +68,8 @@ namespace Quantum.Kata.Measurements {
     // Output: true if the qubit was in the |A⟩ state, or false if it was in the |B⟩ state.
     // The state of the qubit at the end of the operation does not matter.
     operation IsQubitA (alpha : Double, q : Qubit) : Bool {
-        // ...
-        return false;
+        Ry(2.0 * -alpha, q);
+        return M(q) == Zero;
     }
 
 
@@ -87,8 +79,7 @@ namespace Quantum.Kata.Measurements {
     //         1 if they were in |11⟩ state.
     // The state of the qubits at the end of the operation does not matter.
     operation ZeroZeroOrOneOne (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        return ResultAsInt([M(qs[0])]);
     }
 
 
@@ -104,8 +95,7 @@ namespace Quantum.Kata.Measurements {
     // (i.e., |10⟩ state corresponds to qs[0] in state |1⟩ and qs[1] in state |0⟩).
     // The state of the qubits at the end of the operation does not matter.
     operation BasisStateMeasurement (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        return ResultAsInt([M(qs[1]), M(qs[0])]);
     }
 
 
@@ -124,7 +114,15 @@ namespace Quantum.Kata.Measurements {
     // Example: for bit strings [false, true, false] and [false, false, true]
     //          return 0 corresponds to state |010⟩, and return 1 corresponds to state |001⟩.
     operation TwoBitstringsMeasurement (qs : Qubit[], bits1 : Bool[], bits2 : Bool[]) : Int {
-        // ...
+        for(i in 0..Length(qs)-1) {
+            if(bits1[i] != bits2[i]) {
+                if(M(qs[i]) == One && bits1[i] || M(qs[i]) == Zero && not bits1[i]) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            }
+        }
         return -1;
     }
 
@@ -193,8 +191,12 @@ namespace Quantum.Kata.Measurements {
     //         1 if they were in the W state.
     // The state of the qubits at the end of the operation does not matter.
     operation AllZerosOrWState (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        // if(ForAll(M(_) == Zero), qs)) {
+        //     return 0;
+        // }
+        // return 1;
+        ApplyToEach(CNOT(_, qs[0]), qs[1..Length(qs)-1]);
+        return ResultAsInt([M(qs[0])]);
     }
 
 
@@ -206,8 +208,20 @@ namespace Quantum.Kata.Measurements {
     //         1 if they were in the W state.
     // The state of the qubits at the end of the operation does not matter.
     operation GHZOrWState (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        mutable found = false;
+        for(i in 0..Length(qs)-1) {
+            if(M(qs[i]) == One) {
+                if(not found) {
+                    set found = true;
+                } else {
+                    return 0;
+                }
+            }
+        }
+        if(not found) {
+            return 0;
+        }
+        return 1;
     }
 
 
@@ -223,10 +237,9 @@ namespace Quantum.Kata.Measurements {
     //         3 if they were in |Ψ⁻⟩ state.
     // The state of the qubits at the end of the operation does not matter.
     operation BellState (qs : Qubit[]) : Int {
-        // Hint: you need to use 2-qubit gates to solve this task
-
-        // ...
-        return -1;
+        (Adjoint CNOT)(qs[0], qs[1]);
+        H(qs[0]);
+        return ResultAsInt([M(qs[0]), M(qs[1])]);
     }
 
 
@@ -242,8 +255,8 @@ namespace Quantum.Kata.Measurements {
     //         3 if they were in |S3⟩ state.
     // The state of the qubits at the end of the operation does not matter.
     operation TwoQubitState (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        ApplyToEach(H, qs);
+        return ResultAsInt([M(qs[1]), M(qs[0])]);
     }
 
 
@@ -259,8 +272,11 @@ namespace Quantum.Kata.Measurements {
     //         3 if they were in |S3⟩ state.
     // The state of the qubits at the end of the operation does not matter.
     operation TwoQubitStatePartTwo (qs : Qubit[]) : Int {
-        // ...
-        return -1;
+        ApplyToEach(X, qs);
+        H(qs[1]);
+        CNOT(qs[0], qs[1]);
+        H(qs[0]);
+        return ResultAsInt([M(qs[0]), M(qs[1])]);
     }
 
 
@@ -296,8 +312,8 @@ namespace Quantum.Kata.Measurements {
     // The state of the qubit at the end of the operation does not matter.
     // Note: in this task you have to get accuracy of at least 80%.
     operation IsQubitPlusOrZero (q : Qubit) : Bool {
-        // ...
-        return true;
+        Ry(PI() / 4.0, q);
+        return M(q) == Zero;
     }
 
 
@@ -316,8 +332,20 @@ namespace Quantum.Kata.Measurements {
     // The state of the qubit at the end of the operation does not matter.
     // You are allowed to use ancilla qubit(s).
     operation IsQubitPlusZeroOrInconclusiveSimpleUSD (q : Qubit) : Int {
-        // ...
-        return -2;
+        if(RandomInt(2) == 0) {
+            if(M(q) == One) {
+                return 1;
+            } else {
+                return -1;
+            }
+        } else {
+            H(q);
+            if(M(q) == One) {
+                return 0;
+            } else {
+                return -1;
+            }
+        }
     }
 
 
