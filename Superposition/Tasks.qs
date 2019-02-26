@@ -58,7 +58,7 @@ namespace Quantum.Kata.Superposition {
         // You don't need to modify them. Feel free to remove them, this won't cause your code to fail.
         Fact(Length(qs) == 2, "The array should have exactly 2 qubits.");
 
-        // ...
+        ApplyToEach(H, qs);
     }
 
 
@@ -78,8 +78,9 @@ namespace Quantum.Kata.Superposition {
         // You don't need to modify them. Feel free to remove them, this won't cause your code to fail.
         Fact(Length(qs) == 2, "The array should have exactly 2 qubits.");
 
-        // Hint: Is this state separable?
-        // ...
+        X(qs[0]);
+        ApplyToEach(H, qs);
+        S(qs[1]);
     }
 
 
