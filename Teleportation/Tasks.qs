@@ -44,7 +44,8 @@ namespace Quantum.Kata.Teleportation {
     // In the context of the quantum teleportation protocol, this is the preparation step:
     // qubits qAlice and qBob will be sent to Alice and Bob, respectively.
     operation Entangle (qAlice : Qubit, qBob : Qubit) : Unit {
-        // ...
+        H(qAlice);
+        CNOT(qAlice, qBob);
     }
     
     
@@ -61,8 +62,9 @@ namespace Quantum.Kata.Teleportation {
     //      Represent measurement result 'One' as 'true' and 'Zero' as 'false'.
     // The state of the qubits in the end of the operation doesn't matter.
     operation SendMessage (qAlice : Qubit, qMessage : Qubit) : (Bool, Bool) {
-        // ...
-        return (false, false);
+        CNOT(qMessage, qAlice);
+        H(qMessage);
+        return (M(qMessage) == One, M(qAlice) == One);
     }
     
     
@@ -75,7 +77,12 @@ namespace Quantum.Kata.Teleportation {
     //         in the format used in task 1.2.
     // Goal: transform Bob's qubit qBob into the state in which the message qubit had been originally.
     operation ReconstructMessage (qBob : Qubit, (b1 : Bool, b2 : Bool)) : Unit {
-        // ...
+        if(b2) {
+            X(qBob);
+        }
+        if(b1) {
+            Z(qBob);
+        }
     }
     
     
@@ -88,7 +95,8 @@ namespace Quantum.Kata.Teleportation {
     // Goal: transform Bob's qubit qBob into the state |ψ⟩.
     // The state of the qubits qAlice and qMessage in the end of the operation doesn't matter.
     operation StandardTeleport (qAlice : Qubit, qBob : Qubit, qMessage : Qubit) : Unit {
-        // ...
+        Entangle(qAlice, qBob);
+        ReconstructMessage(qBob, SendMessage(qAlice, qMessage));
     }
     
     
@@ -109,8 +117,16 @@ namespace Quantum.Kata.Teleportation {
     //      Represent measurement result 'One' as 'true' and 'Zero' as 'false'.
     // The state of the qubit qAlice in the end of the operation doesn't matter.
     operation PrepareAndSendMessage (qAlice : Qubit, basis : Pauli, state : Bool) : (Bool, Bool) {
-        // ...
-        return (false, false);
+        mutable res = (false, false);
+        using(anc = Qubit()) {
+            if(state) {
+                X(anc);
+            }
+            PrepareQubit(basis, anc);
+            set res = SendMessage(qAlice, anc);
+            Reset(anc);
+        }
+        return res;
     }
     
     
@@ -130,9 +146,8 @@ namespace Quantum.Kata.Teleportation {
     // in which the message qubit was originally prepared, then measure it. 
     // The state of the qubit qBob in the end of the operation doesn't matter.
     operation ReconstructAndMeasureMessage (qBob : Qubit, (b1 : Bool, b2 : Bool), basis : Pauli) : Bool {
-        
-        // ...
-        return false;
+        ReconstructMessage(qBob, (b1, b2));
+        return Measure([basis], [qBob]) == One;
     }
     
     
@@ -144,11 +159,18 @@ namespace Quantum.Kata.Teleportation {
     // (|0⟩ + i|1⟩) / sqrt(2), and
     // (|0⟩ - i|1⟩) / sqrt(2)
     operation StandardTeleport_Test () : Unit {
-        // Hint: You may find your answers for 1.5 and 1.6 useful
-
-        // StandardTeleport_Test appears in the list of unit tests for the solution; run it to verify your code.
-
-        // ...
+        for(basis in [PauliX, PauliY, PauliZ]) {
+            for(state in [true, false]) {
+                using(qs = Qubit[2]) {
+                    Entangle(qs[0], qs[1]);
+                    AssertBoolEqual(
+                        ReconstructAndMeasureMessage(qs[1], PrepareAndSendMessage(qs[0], basis, state), basis),
+                        state,
+                        $"Teleportation for basis {basis} in state {state ? "+1" | "-1"} failed");
+                    ResetAll(qs);
+                }
+            }
+        }
     }
     
     
