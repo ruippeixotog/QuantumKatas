@@ -81,7 +81,7 @@ namespace Quantum.Kata.Measurements {
     //         1 if they were in |11⟩ state.
     // The state of the qubits at the end of the operation does not matter.
     operation ZeroZeroOrOneOne (qs : Qubit[]) : Int {
-        return ResultAsInt([M(qs[0])]);
+        return ResultArrayAsInt([M(qs[0])]);
     }
 
 
@@ -97,7 +97,7 @@ namespace Quantum.Kata.Measurements {
     // (i.e., |10⟩ state corresponds to qs[0] in state |1⟩ and qs[1] in state |0⟩).
     // The state of the qubits at the end of the operation does not matter.
     operation BasisStateMeasurement (qs : Qubit[]) : Int {
-        return ResultAsInt([M(qs[1]), M(qs[0])]);
+        return ResultArrayAsInt([M(qs[1]), M(qs[0])]);
     }
 
 
@@ -118,7 +118,7 @@ namespace Quantum.Kata.Measurements {
     operation TwoBitstringsMeasurement (qs : Qubit[], bits1 : Bool[], bits2 : Bool[]) : Int {
         for(i in 0..Length(qs)-1) {
             if(bits1[i] != bits2[i]) {
-                if(M(qs[i]) == One && bits1[i] || M(qs[i]) == Zero && not bits1[i]) {
+                if(M(qs[i]) == One and bits1[i] or M(qs[i]) == Zero and not bits1[i]) {
                     return 0;
                 } else {
                     return 1;
@@ -198,7 +198,7 @@ namespace Quantum.Kata.Measurements {
         // }
         // return 1;
         ApplyToEach(CNOT(_, qs[0]), qs[1..Length(qs)-1]);
-        return ResultAsInt([M(qs[0])]);
+        return ResultArrayAsInt([M(qs[0])]);
     }
 
 
@@ -241,7 +241,7 @@ namespace Quantum.Kata.Measurements {
     operation BellState (qs : Qubit[]) : Int {
         (Adjoint CNOT)(qs[0], qs[1]);
         H(qs[0]);
-        return ResultAsInt([M(qs[0]), M(qs[1])]);
+        return ResultArrayAsInt([M(qs[0]), M(qs[1])]);
     }
 
 
@@ -258,7 +258,7 @@ namespace Quantum.Kata.Measurements {
     // The state of the qubits at the end of the operation does not matter.
     operation TwoQubitState (qs : Qubit[]) : Int {
         ApplyToEach(H, qs);
-        return ResultAsInt([M(qs[1]), M(qs[0])]);
+        return ResultArrayAsInt([M(qs[1]), M(qs[0])]);
     }
 
 
@@ -278,7 +278,7 @@ namespace Quantum.Kata.Measurements {
         H(qs[1]);
         CNOT(qs[0], qs[1]);
         H(qs[0]);
-        return ResultAsInt([M(qs[0]), M(qs[1])]);
+        return ResultArrayAsInt([M(qs[0]), M(qs[1])]);
     }
 
 
